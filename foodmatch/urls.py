@@ -7,6 +7,6 @@ from dating.views import login_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     #path('', lambda request: redirect('dating:discover')),
-    path('', login_view),
+    path('', admin.site.urls),
     path('dating/', include('dating.urls')),
 ]
