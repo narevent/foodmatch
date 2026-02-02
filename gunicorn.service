@@ -14,7 +14,13 @@ UMask=0007
 WorkingDirectory=/var/www/foodmatch
 Environment="PATH=/var/www/foodmatch/venv/bin"
 EnvironmentFile=/var/www/foodmatch/.env
-ExecStart=/var/www/foodmatch/venv/bin/gunicorn     --workers 3     --bind unix:/var/www/foodmatch/gunicorn.sock     --timeout 60     --access-logfile /var/www/foodmatch/logs/gunicorn-access.log     --error-logfile /var/www/foodmatch/logs/gunicorn-error.log     foodmatch.wsgi:application
+ExecStart=/var/www/foodmatch/venv/bin/gunicorn \
+    --workers 3 \
+    --bind unix:/var/www/foodmatch/gunicorn.sock \
+    --timeout 60 \
+    --access-logfile /var/www/foodmatch/logs/gunicorn-access.log \
+    --error-logfile /var/www/foodmatch/logs/gunicorn-error.log \
+    foodmatch.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
