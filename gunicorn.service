@@ -1,3 +1,8 @@
+# CONFIGURATION
+# PROJECT_NAME: foodmatch
+# PROJECT_DIR: /var/www/foodmatch
+# WSGI_MODULE: foodmatch.wsgi:application
+
 [Unit]
 Description=Gunicorn daemon for foodmatch Django application
 After=network.target
@@ -5,16 +10,11 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
+UMask=0007
 WorkingDirectory=/var/www/foodmatch
 Environment="PATH=/var/www/foodmatch/venv/bin"
 EnvironmentFile=/var/www/foodmatch/.env
-ExecStart=/var/www/foodmatch/venv/bin/gunicorn \
-    --workers 3 \
-    --bind unix:/var/www/foodmatch/gunicorn.sock \
-    --timeout 60 \
-    --access-logfile /var/www/foodmatch/logs/gunicorn-access.log \
-    --error-logfile /var/www/foodmatch/logs/gunicorn-error.log \
-    foodmatch.wsgi:application
+ExecStart=/var/www/foodmatch/venv/bin/gunicorn     --workers 3     --bind unix:/var/www/foodmatch/gunicorn.sock     --timeout 60     --access-logfile /var/www/foodmatch/logs/gunicorn-access.log     --error-logfile /var/www/foodmatch/logs/gunicorn-error.log     foodmatch.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
