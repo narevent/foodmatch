@@ -2,10 +2,10 @@
 set -e
 
 echo "================================"
-echo "Vetgaaf Update Script"
+echo "foodmatch Update Script"
 echo "================================"
 
-PROJECT_DIR="/var/www/vetgaaf"
+PROJECT_DIR="/var/www/foodmatch"
 
 # Change to project directory
 cd $PROJECT_DIR
@@ -30,7 +30,7 @@ echo "Collecting static files..."
 sudo -u www-data $PROJECT_DIR/venv/bin/python manage.py collectstatic --noinput
 
 echo "Restarting Gunicorn..."
-sudo systemctl restart gunicorn-vetgaaf
+sudo systemctl restart gunicorn-foodmatch
 
 echo "Reloading Nginx..."
 sudo systemctl reload nginx
@@ -41,10 +41,10 @@ echo "Update Complete!"
 echo "================================"
 echo ""
 echo "Service status:"
-sudo systemctl status gunicorn-vetgaaf --no-pager | head -5
+sudo systemctl status gunicorn-foodmatch --no-pager | head -5
 echo ""
 echo "Recent logs (last 20 lines):"
-sudo journalctl -u gunicorn-vetgaaf -n 20 --no-pager
+sudo journalctl -u gunicorn-foodmatch -n 20 --no-pager
 echo ""
-echo "Site is running at: https://vetgaaf.tech"
+echo "Site is running at: https://foodmatch.vetgaaf.tech"
 echo ""
