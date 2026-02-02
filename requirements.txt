@@ -1,0 +1,5 @@
+# requirements.txt
+Django>=4.2.0
+g4f>=0.1.9
+Pillow>=10.0.0
+requests>=2.31.0

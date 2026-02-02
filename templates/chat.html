@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chat Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(31, 41, 55, 0.5);
+        }
+        .animate-bounce-slow {
+            animation: bounce 1s infinite;
+        }
+        .animate-bounce-slow:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        .animate-bounce-slow:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40%, 43% {
+                transform: translateY(-10px);
+            }
+            70% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <div id="app" class="h-screen flex flex-col">
+        <!-- Header -->
+        <div class="glass-effect border-b border-gray-700 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        🤖
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold">LLM Chat Interface</h1>
+                        <p class="text-sm text-gray-400" id="mode-display">Text mode • gpt-4o-mini</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                        ⚙️
+                    </button>
+                    <button id="clear-btn" class="p-2 rounded-lg hover:bg-gray-700 transition-colors text-red-400 hover:text-red-300">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="glass-effect border-b border-gray-700 p-4 space-y-4 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Text Model</label>
+                    <select id="text-model" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="claude-3-haiku">Claude 3 Haiku</option>
+                        <option value="gemini-pro">Gemini Pro</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Image Model</label>
+                    <select id="image-model" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                        <option value="flux">Flux</option>
+                        <option value="dall-e-3">DALL-E 3</option>
+                        <option value="stable-diffusion">Stable Diffusion</option>
+                        <option value="midjourney">Midjourney</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Mode</label>
+                    <div class="flex rounded-lg bg-gray-700 p-1">
+                        <button id="text-mode-btn" class="flex-1 px-3 py-1 rounded-md text-sm transition-colors bg-blue-500 text-white">
+                            Text
+                        </button>
+                        <button id="image-mode-btn" class="flex-1 px-3 py-1 rounded-md text-sm transition-colors text-gray-300 hover:text-white">
+                            Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="system-prompt-container">
+                <label class="block text-sm font-medium mb-1">System Prompt</label>
+                <textarea id="system-prompt" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Enter system prompt...">You are a helpful AI assistant.</textarea>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div id="welcome-message" class="flex items-center justify-center h-full text-gray-400">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">🤖</div>
+                    <p class="text-lg mb-2">Welcome to LLM Chat Interface</p>
+                    <p class="text-sm">Switch between text and image generation modes. Start a conversation!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="border-t border-gray-700 glass-effect p-4">
+            <div class="flex items-end gap-3">
+                <div class="flex-1 relative">
+                    <textarea id="message-input" placeholder="Type your message..." class="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="1" style="min-height: 48px; max-height: 120px;"></textarea>
+                    <div id="input-icon" class="absolute right-3 top-3 text-gray-400">
+                        💬
+                    </div>
+                </div>
+                
+                <button id="send-btn" class="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-xl p-3 transition-colors">
+                    📤
+                </button>
+            </div>
+            
+            <div class="mt-2 text-xs text-gray-400 text-center" id="input-help">
+                Press Enter to send • Shift+Enter for new line
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentMode = 'text';
+        let isLoading = false;
+        let showSettings = false;
+
+        // DOM elements
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const clearBtn = document.getElementById('clear-btn');
+        const modeDisplay = document.getElementById('mode-display');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const textModeBtn = document.getElementById('text-mode-btn');
+        const imageModeBtn = document.getElementById('image-mode-btn');
+        const inputIcon = document.getElementById('input-icon');
+        const inputHelp = document.getElementById('input-help');
+        const systemPromptContainer = document.getElementById('system-prompt-container');
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', handleKeyPress);
+        settingsBtn.addEventListener('click', toggleSettings);
+        clearBtn.addEventListener('click', clearHistory);
+        textModeBtn.addEventListener('click', () => setMode('text'));
+        imageModeBtn.addEventListener('click', () => setMode('image'));
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update UI
+            if (mode === 'text') {
+                textModeBtn.classList.add('bg-blue-500', 'text-white');
+                textModeBtn.classList.remove('text-gray-300');
+                imageModeBtn.classList.remove('bg-blue-500', 'text-white');
+                imageModeBtn.classList.add('text-gray-300');
+                messageInput.placeholder = 'Type your message...';
+                inputIcon.textContent = '💬';
+                inputHelp.textContent = 'Press Enter to send • Shift+Enter for new line';
+                systemPromptContainer.classList.remove('hidden');
+            } else {
+                imageModeBtn.classList.add('bg-blue-500', 'text-white');
+                imageModeBtn.classList.remove('text-gray-300');
+                textModeBtn.classList.remove('bg-blue-500', 'text-white');
+                textModeBtn.classList.add('text-gray-300');
+                messageInput.placeholder = 'Describe the image you want to generate...';
+                inputIcon.textContent = '🖼️';
+                inputHelp.textContent = 'Describe your image and press Enter';
+                systemPromptContainer.classList.add('hidden');
+            }
+            
+            updateModeDisplay();
+        }
+
+        function updateModeDisplay() {
+            const textModel = document.getElementById('text-model').value;
+            const imageModel = document.getElementById('image-model').value;
+            const model = currentMode === 'text' ? textModel : imageModel;
+            modeDisplay.textContent = `${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} mode • ${model}`;
+        }
+
+        function toggleSettings() {
+            showSettings = !showSettings;
+            settingsPanel.classList.toggle('hidden');
+        }
+
+        function createMessageElement(message) {
+            const isUser = message.sender === 'user';
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`;
+            
+            const bubbleClass = isUser 
+                ? 'bg-blue-500 text-white' 
+                : message.is_error 
+                    ? 'bg-red-100 text-red-800 border border-red-200' 
+                    : 'bg-gray-100 text-gray-800';
+            
+            let content = '';
+            if (message.type === 'image' && !isUser) {
+                content = `
+                    <div class="space-y-2">
+                        ${message.prompt ? `<p class="text-sm opacity-75 italic">"${message.prompt}"</p>` : ''}
+                        <div class="relative group">
+                            <img src="${message.content}" alt="Generated image" class="rounded-lg max-w-full h-auto" style="max-width: 400px;">
+                            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                <a href="${message.content}" download="generated-image.jpg" class="bg-white text-black px-3 py-1 rounded-full flex items-center gap-1 text-sm hover:bg-gray-100 transition-colors">
+                                    💾 Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <div class="space-y-2">
+                        <pre class="whitespace-pre-wrap font-sans text-sm leading-relaxed">${message.content}</pre>
+                        ${!isUser ? `<button onclick="copyToClipboard('${message.content.replace(/'/g, "\'")}'); this.textContent='Copied!'; setTimeout(() => this.textContent='📋 Copy', 2000)" class="text-xs opacity-50 hover:opacity-100 transition-opacity">📋 Copy</button>` : ''}
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="flex items-start max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser ? 'bg-blue-500 ml-2' : 'bg-gray-600 mr-2'}">
+                        ${isUser ? '👤' : '🤖'}
+                    </div>
+                    <div class="rounded-2xl px-4 py-2 ${bubbleClass}">
+                        ${content}
+                        <div class="text-xs opacity-50 mt-1">${message.timestamp}</div>
+                    </div>
+                </div>
+            `;
+            
+            return messageDiv;
+        }
+
+        function addLoadingMessage() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-message';
+            loadingDiv.className = 'flex justify-start mb-4';
+            loadingDiv.innerHTML = `
+                <div class="flex items-start max-w-[80%]">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gray-600 mr-2">
+                        🤖
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl px-4 py-2">
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <div class="flex gap-1">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce-slow"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce-slow"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce-slow"></div>
+                            </div>
+                            <span class="text-sm">${currentMode === 'text' ? 'Generating response...' : 'Generating image...'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(loadingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isLoading) return;
+            
+            isLoading = true;
+            sendBtn.disabled = true;
+            
+            // Hide welcome message
+            welcomeMessage.style.display = 'none';
+            
+            // Add loading message
+            addLoadingMessage();
+            
+            try {
+                const response = await fetch('/api/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        type: currentMode,
+                        model: document.getElementById('text-model').value,
+                        image_model: document.getElementById('image-model').value,
+                        system_prompt: document.getElementById('system-prompt').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Remove loading message
+                removeLoadingMessage();
+                
+                if (data.success) {
+                    // Add user message
+                    const userMessageEl = createMessageElement(data.user_message);
+                    messagesContainer.appendChild(userMessageEl);
+                    
+                    // Add bot message
+                    const botMessageEl = createMessageElement(data.bot_message);
+                    messagesContainer.appendChild(botMessageEl);
+                } else {
+                    // Add user message
+                    const userMessageEl = createMessageElement(data.user_message);
+                    messagesContainer.appendChild(userMessageEl);
+                    
+                    // Add error message
+                    const errorMessageEl = createMessageElement(data.bot_message);
+                    messagesContainer.appendChild(errorMessageEl);
+                }
+                
+                messageInput.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+            } catch (error) {
+                removeLoadingMessage();
+                console.error('Error sending message:', error);
+                alert('Error sending message. Please try again.');
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+            }
+        }
+
+        async function clearHistory() {
+            if (confirm('Are you sure you want to clear the conversation history?')) {
+                try {
+                    await fetch('/api/clear_history', { method: 'POST' });
+                    messagesContainer.innerHTML = '';
+                    welcomeMessage.style.display = 'flex';
+                    messagesContainer.appendChild(welcomeMessage);
+                } catch (error) {
+                    console.error('Error clearing history:', error);
+                }
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateModeDisplay();
+            
+            // Add event listeners for model changes
+            document.getElementById('text-model').addEventListener('change', updateModeDisplay);
+            document.getElementById('image-model').addEventListener('change', updateModeDisplay);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Food Match{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .swipe-card {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+        .swipe-card.swiping-left {
+            transform: translateX(-100%) rotate(-15deg);
+        }
+        .swipe-card.swiping-right {
+            transform: translateX(100%) rotate(15deg);
+        }
+        .pulse-heart {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-100 to-orange-100 min-h-screen">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-utensils text-pink-500 text-2xl"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">Food Match</h1>
+                </div>
+                {% if user.is_authenticated %}
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'dating:discover' %}" class="text-gray-600 hover:text-pink-500">
+                        <i class="fas fa-heart mr-1"></i>Discover
+                    </a>
+                    <a href="{% url 'dating:matches' %}" class="text-gray-600 hover:text-pink-500">
+                        <i class="fas fa-fire mr-1"></i>Matches
+                    </a>
+                    <span class="text-gray-600">Hello, {{ user.first_name }}!</span>
+                    <a href="{% url 'dating:logout' %}" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600">
+                        Logout
+                    </a>
+                </div>
+                {% else %}
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'dating:login' %}" class="text-gray-600 hover:text-pink-500">Login</a>
+                    <a href="{% url 'dating:register' %}" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600">
+                        Sign Up
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.2/cdn.min.js" defer></script>
+</body>
+</html>

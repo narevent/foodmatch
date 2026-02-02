@@ -1,0 +1,146 @@
+<!-- templates/dating/discover.html -->
+{% extends 'base.html' %}
+
+{% block title %}Discover Food - Tinder for Food{% endblock %}
+
+{% block content %}
+<div x-data="foodSwiper()" class="max-w-md mx-auto">
+    {% if current_food %}
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden swipe-card" :class="swipeClass" id="food-card">
+        <!-- Food Image -->
+        <div class="h-96 bg-gray-200 relative overflow-hidden">
+            {% if current_food.image_url %}
+            <img src="{{ current_food.image_url }}" alt="{{ current_food.name }}" class="w-full h-full object-cover">
+            {% else %}
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200">
+                <i class="fas fa-utensils text-6xl text-white"></i>
+            </div>
+            {% endif %}
+            
+            <!-- Calorie Badge -->
+            <div class="absolute top-4 right-4 bg-white bg-opacity-90 px-3 py-1 rounded-full">
+                <span class="text-sm font-medium text-gray-800">{{ current_food.calories }} cal</span>
+            </div>
+        </div>
+
+        <!-- Food Info -->
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-2xl font-bold text-gray-800">{{ current_food.name }}</h3>
+                <span class="bg-pink-100 text-pink-600 px-2 py-1 rounded-full text-xs font-medium">
+                    {{ current_food.get_meal_type_display }}
+                </span>
+            </div>
+            
+            <p class="text-gray-600 mb-4">{{ current_food.description }}</p>
+            
+            <div class="space-y-2 text-sm text-gray-500">
+                <div class="flex items-center">
+                    <i class="fas fa-globe w-4 mr-2"></i>
+                    <span>{{ current_food.cuisine_type }} Cuisine</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-leaf w-4 mr-2"></i>
+                    <span>{{ current_food.get_diet_compatibility_display }}</span>
+                </div>
+                {% if current_food.get_ingredients_list %}
+                <div class="flex items-center">
+                    <i class="fas fa-list w-4 mr-2"></i>
+                    <span>{{ current_food.ingredients|truncatechars:50 }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex space-x-4 p-6 pt-0">
+            <button @click="swipeFood('pass')" class="flex-1 bg-gray-200 text-gray-600 py-3 px-4 rounded-full hover:bg-gray-300 transition-colors">
+                <i class="fas fa-times text-xl mr-2"></i>Pass
+            </button>
+            <button @click="swipeFood('like')" class="flex-1 bg-pink-500 text-white py-3 px-4 rounded-full hover:bg-pink-600 transition-colors">
+                <i class="fas fa-heart text-xl mr-2"></i>Like
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+        <i class="fas fa-utensils text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">No more food to discover!</h3>
+        <p class="text-gray-600 mb-4">We're generating more delicious options for you...</p>
+        <button onclick="location.reload()" class="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600">
+            <i class="fas fa-sync mr-2"></i>Refresh
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Match Modal -->
+    <div x-show="showMatchModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+        <div class="bg-white rounded-xl p-8 max-w-sm mx-4 text-center">
+            <div class="pulse-heart text-6xl text-pink-500 mb-4">
+                <i class="fas fa-heart"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">It's a Match!</h3>
+            <p class="text-gray-600 mb-6" x-text="matchMessage"></p>
+            <button @click="closeMatchModal()" class="bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-pink-600">
+                Keep Swiping!
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function foodSwiper() {
+    return {
+        swipeClass: '',
+        showMatchModal: false,
+        matchMessage: '',
+        
+        swipeFood(action) {
+            const foodId = "{{ current_food.id|default:0 }}";
+            
+            // Add swipe animation
+            this.swipeClass = action === 'like' ? 'swiping-right' : 'swiping-left';
+            
+            // Send swipe action to backend
+            fetch('{% url "dating:swipe_food" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    food_id: foodId,
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'mutual_match') {
+                    this.matchMessage = data.message;
+                    this.showMatchModal = true;
+                }
+                
+                // Reload page after animation
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            });
+        },
+        
+        closeMatchModal() {
+            this.showMatchModal = false;
+        }
+    }
+}
+</script>
+
+<!-- Hidden CSRF token for AJAX requests -->
+{% csrf_token %}
+{% endblock %}
